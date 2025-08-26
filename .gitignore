@@ -1,2 +1,4 @@
 .venv/
 .idea/
+bakery_image_dataset/
+.DS_Store
