@@ -1,9 +1,22 @@
 """
-	--> SnapStock <--
+	--> SnapStock V 1.1 Update <--
+
+	NOTE: The project idea is generalize and will be hard to achieve it doing that
+	for every sector, therefore, we are going to do it for a bakery store, in that way we
+	can follow the structure and adjust the dataset for any sector.
+
+    DATASET: Due to the lack of large, pre-existing datasets for bakery goods,
+    a custom dataset was built from scratch. A Python script was used to programmatically
+    download hundreds of images for a comprehensive list of categories (croissants, muffins, etc.)
+    from web search results. This raw dataset then underwent a crucial manual cleaning phase to
+    remove irrelevant or low-quality images. The curated images were then annotated with bounding
+    boxes using Roboflow. Finally, the dataset was generated with preprocessing (resize to 640x640)
+    and data augmentation (flips, rotations, brightness adjustments) to create a robust,
+    training-ready collection.
 
 	Structure of the SnapStock backend:
 	- Features:
-		- Object Detection Model Using YOLO 8 and trained with COCO dataset
+		- Object Detection Model Using YOLO 11 and trained with COCO dataset
 		- Features Extraction using ResNet50
 		- Clustering using K-means
 		- Database Generation using Gemini API
