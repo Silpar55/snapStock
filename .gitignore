@@ -1,5 +1,5 @@
 .venv/
 .idea/
 bakery_image_dataset/
+Bakery-Detection
 .DS_Store
-yolo11n.pt
