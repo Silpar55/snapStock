@@ -2,6 +2,16 @@
 
 An AI-powered inventory management system that uses computer vision to automatically detect, cluster, and catalog products for small businesses, starting with a focus on bakeries.
 
+***
+### Developer's Note: Project Evolution & Next Steps
+
+* **Dataset Refinement (Solving "Domain Shift"):** It was discovered that training the model on isolated product images resulted in poor performance on real-world shelf photos. To address this, the project is moving to a new dataset composed of realistic, cluttered shelf images. This will ensure the model is trained in an environment that mirrors its final use case, significantly improving its accuracy and robustness.
+
+* **Enhanced Clustering Logic (Spatial + Visual):** The AI pipeline is being upgraded to a two-stage clustering process for a more intuitive user experience.
+    1.  **Spatial Clustering:** First, a **DBSCAN** algorithm will group detected items based on their physical proximity on the shelf.
+    2.  **Visual Clustering:** Then, within each of those spatial groups, **ResNet and K-Means** will cluster items by their visual similarity. This allows the application to present logical groups to the user (e.g., "all the items on the top-left tray") rather than just visually similar items from all over the store.
+***
+
 ## About The Project
 
 Many small businesses lack a proper database to track their inventory, leading to inefficiencies and lost revenue. Manually cataloging every item is a tedious and time-consuming process. SnapStock solves this problem by providing an intelligent system that can build an inventory database from a few simple photos.
