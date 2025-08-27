@@ -14,6 +14,8 @@
     and data augmentation (flips, rotations, brightness adjustments) to create a robust,
     training-ready collection.
 
+    DATASET - Roboflow: https://app.roboflow.com/snapstock/bakery-detection-evzzv/models
+
 	Structure of the SnapStock backend:
 	- Features:
 		- Object Detection Model Using YOLO 11 and trained with COCO dataset
