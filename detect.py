@@ -4,11 +4,11 @@ from ultralytics import YOLO
 
 # --- Setup ---
 # Load your custom trained model
-model = YOLO("best.pt")
+model = YOLO("models/snapStockV3/best.pt")
 
 # Define the input and output folders
 input_folder = "test_images_irl/"
-output_folder = "test_results/"
+output_folder = "test_results_irl/"
 
 # Create the output folder if it doesn't exist
 os.makedirs(output_folder, exist_ok=True)
@@ -44,18 +44,19 @@ if full_image_paths:
 			# Get the confidence score
 			confidence = float(box.conf[0])
 
-			# Get the class ID and name
-			class_id = int(box.cls[0])
-			class_name = results.names[class_id]
+			if confidence > 0.5:
+				# Get the class ID and name
+				class_id = int(box.cls[0])
+				class_name = results.names[class_id]
 
-			# Create the label text
-			label = f"{class_name} {confidence:.2f}"
+				# Create the label text
+				label = f"{class_name} {confidence:.2f}"
 
-			# Draw the bounding box on the image (green color, thickness 2)
-			cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+				# Draw the bounding box on the image (green color, thickness 2)
+				cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-			# Put the label text above the bounding box
-			cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+				# Put the label text above the bounding box
+				cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
 		# --- Save the Resulting Image ---
 		# Construct the output path
