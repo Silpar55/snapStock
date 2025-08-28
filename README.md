@@ -3,7 +3,18 @@
 An AI-powered inventory management system that uses computer vision to automatically detect, cluster, and catalog products for small businesses, starting with a focus on bakeries.
 
 ***
-### Developer's Note: Project Evolution & Next Steps
+### Developer's Note: Project Evolution & Next Steps -- August 27 --
+
+* **Finalizing the Detection Strategy (Class-Agnostic Approach):** After training on the new shelf dataset, it was observed that the model's primary strength was in *finding* objects, not in accurately classifying them. The model successfully detected most of the relevant bakery items but had low confidence in its labels. This is a great outcome, as the final classification is handled by the user later in the workflow.
+
+* **Action Plan:** To capitalize on this strength, the detection strategy is being simplified to a **class-agnostic** approach.
+    1.  **Re-annotate Dataset:** The dataset will be re-labeled so that all distinct categories (`pastry`, `cake`, `donut`, etc.) are merged into a single, universal class: **`item`**.
+    2.  **Re-train Model:** The YOLOv8 model will be re-trained on this single-class dataset. The goal is to create a highly accurate and confident detector whose only job is to answer the question, "Is this an item of interest?"
+    3.  **Result:** This will significantly improve the `mAP50` score and the reliability of the initial detection phase, which is the most critical part of the AI pipeline. The downstream clustering and user-labeling processes will remain the same.
+***
+
+***
+### Developer's Note: Project Evolution & Next Steps -- August 26 -- 
 
 * **Dataset Refinement (Solving "Domain Shift"):** It was discovered that training the model on isolated product images resulted in poor performance on real-world shelf photos. To address this, the project is moving to a new dataset composed of realistic, cluttered shelf images. This will ensure the model is trained in an environment that mirrors its final use case, significantly improving its accuracy and robustness.
 
