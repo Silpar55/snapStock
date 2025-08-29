@@ -32,3 +32,10 @@
 		- /generate-db: This endpoint takes the user's labels for the clusters and calls
 		the LLM script to generate and return the final database script.
 """
+
+from detect import detect_and_filter_objects
+
+boxes = detect_and_filter_objects("./test_images_irl/tims-01.jpeg")
+
+print(boxes[0])
+
