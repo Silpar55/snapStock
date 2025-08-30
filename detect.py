@@ -1,41 +1,36 @@
 import os
 import cv2
 
-"""
-	Detect the objects in one or multiple images
-	and return and array of boxes for each image filtered by their confidence score
-"""
 
-
-def detect_and_filter_objects(model, image_paths, conf=0.5):
+def process_image(model, image_path, conf=0.5, target_size=(640, 640)):
 	"""
-	Runs YOLO inference on one or more images and filters the detected objects
-	based on a confidence threshold.
-
-	Args:
-	    model: The loaded YOLO model object.
-	    image_paths: A string path to a single image or a list of string paths.
-	    conf (float): The confidence threshold for filtering detections.
-
-	Returns:
-	    A list of numpy arrays. Each numpy array contains the bounding box
-	    coordinates [x1, y1, x2, y2] for a single image's high-confidence detections.
+	Loads an image, resizes it, runs detection, and returns the resized
+	boxes along with the factors needed to scale them back to the original size.
 	"""
-	results_list = model(image_paths)
-	filtered_detections = []
+	original_image = cv2.imread(image_path)
+	if original_image is None:
+		print(f"Warning: Could not read image at {image_path}")
+		return None
 
-	# Iterate for each image
-	for results in results_list:
-		# Get boxes based on the confidence threshold
-		high_conf_indices = results.boxes.conf > conf
-		filtered_boxes = results.boxes[high_conf_indices]
+	original_height, original_width, _ = original_image.shape
 
-		# Get coords
-		box_coords = filtered_boxes.xyxy.cpu().numpy().astype(int)
+	resized_image = cv2.resize(original_image, target_size)
 
-		filtered_detections.append(box_coords)
+	results = model(resized_image)[0]
 
-	return filtered_detections
+	high_conf_indices = results.boxes.conf > conf
+	filtered_boxes_resized = results.boxes[high_conf_indices].xyxy.cpu().numpy().astype(int)
+
+	# Calculate scaling factors
+	x_scale = original_width / target_size[0]
+	y_scale = original_height / target_size[1]
+
+	return {
+		"original_image": original_image,  # Visualization purposes
+		"resized_image": resized_image,
+		"boxes_object": filtered_boxes_resized,  # DBSCAN purpose
+		"scale_factors": (x_scale, y_scale)  # Rescaling purpose
+	}
 
 
 def test_model(model, input_folder="test_images_irl/", output_folder="test_results_irl/"):
