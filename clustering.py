@@ -7,6 +7,32 @@ import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 
 
+def _relabel_noise_as_clusters(labels):
+	"""
+	Takes DBSCAN labels and re-labels noise points (-1) as their own unique clusters.
+	This is because some valid groups have only one object
+	"""
+	if len(labels) == 0:
+		return labels
+
+	# Find the highest existing cluster ID
+	max_label = labels.max()
+
+	# Start the new label counter from the next number
+	new_label_counter = max_label + 1
+
+	# Create a new array for the final labels
+	final_labels = np.copy(labels)
+
+	# Loop through and replace each -1 with a new, unique cluster ID
+	for i in range(len(final_labels)):
+		if final_labels[i] == -1:
+			final_labels[i] = new_label_counter
+			new_label_counter += 1
+
+	return final_labels
+
+
 def boxes_to_midpoints(boxes_xyxy):
 	"""Takes a list of bounding boxes and returns their midpoints."""
 	return [((box[0] + box[2]) / 2, (box[1] + box[3]) / 2) for box in boxes_xyxy]
@@ -38,7 +64,7 @@ def aggregate_corner_labels(corner_labels, box_indices, num_boxes):
 			final_box_labels.append(most_common_label)
 		else:
 			final_box_labels.append(-1)  # Default to noise
-	return final_box_labels
+	return np.array(final_box_labels)
 
 
 def run_dbscan_on_midpoints(boxes_xyxy, eps, min_samples):
@@ -48,6 +74,10 @@ def run_dbscan_on_midpoints(boxes_xyxy, eps, min_samples):
 		return np.array([])
 	dbscan = DBSCAN(eps=eps, min_samples=min_samples)
 	labels = dbscan.fit_predict(midpoints)
+
+	# Post-process the labels to handle single-item groups
+	labels = _relabel_noise_as_clusters(labels)
+
 	return labels
 
 
@@ -58,7 +88,11 @@ def run_dbscan_on_corners(boxes_xyxy, eps, min_samples):
 		return np.array([])
 	dbscan = DBSCAN(eps=eps, min_samples=min_samples)
 	corner_labels = dbscan.fit_predict(corner_points)
-	final_labels = aggregate_corner_labels(corner_labels, box_map, len(boxes_xyxy))
+	aggregate_labels = aggregate_corner_labels(corner_labels, box_map, len(boxes_xyxy))
+
+	# Post-process the labels to handle single-item groups
+	final_labels = _relabel_noise_as_clusters(aggregate_labels)
+
 	return final_labels
 
 
