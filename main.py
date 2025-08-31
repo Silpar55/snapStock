@@ -3,7 +3,9 @@ import cv2
 import os
 import logging
 from detect import process_image, visualize_detections
-from clustering import get_spatial_clusters, visualize_clusters
+from clustering import get_spatial_clusters, get_visual_clusters , visualize_clusters
+from feature_extraction import get_resnet_embeddings
+
 
 # --- 1. Configuration ---
 logging.basicConfig(level=logging.INFO, format='{asctime} - {levelname} - {message}', style='{')
@@ -47,15 +49,30 @@ if __name__ == '__main__':
 			size_filter_percentile=CONFIG["size_filter_percentile"],
 			**CONFIG["dbscan_params"]
 		)
-		image = visualize_clusters(
-			processed_data["original_image"],
-			filtered_boxes_object,
-			cluster_labels,
-			processed_data["scale_factors"]
-		)
-		output_path = os.path.join(CONFIG["output_dir"], CONFIG["image_path"].split('/')[-1])
-		cv2.imwrite(output_path, image)
-		logging.info(f"Saved corner point result to {output_path}")
+
+		# image = visualize_clusters(
+		# 	processed_data["original_image"],
+		# 	filtered_boxes_object,
+		# 	cluster_labels,
+		# 	processed_data["scale_factors"]
+		# )
+		# output_path = os.path.join(CONFIG["output_dir"], CONFIG["image_path"].split('/')[-1])
+		# cv2.imwrite(output_path, image)
+		# logging.info(f"Saved corner point result to {output_path}")
+
+		# --- 6. Feature Extraction---
+		image_crops = []
+		boxes_xyxy = filtered_boxes_object.xyxy.cpu().numpy().astype(int)
+		for box_coords in boxes_xyxy:
+			x1, y1, x2, y2 = box_coords
+			crop = processed_data["resized_image"][y1:y2, x1:x2]
+			image_crops.append(crop)
+
+		if image_crops:
+			embeddings = get_resnet_embeddings(image_crops)
+			print(f"Successfully generated {len(embeddings)} embeddings.")
+
+			print(get_visual_clusters(embeddings))
 
 	else:
 		logging.info("No objects were detected in the image.")
