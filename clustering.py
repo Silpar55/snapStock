@@ -2,7 +2,8 @@ from collections import Counter
 
 import cv2
 import numpy as np
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, KMeans
+from kneed import KneeLocator
 
 
 # --- Private Helper Functions ---
@@ -185,3 +186,37 @@ def visualize_clusters(original_image, boxes_object, cluster_labels, scale_facto
 						box_color, 2)
 
 	return img_to_draw
+
+
+def get_visual_clusters(embeddings):
+	"""
+	Takes a list of ResNet embeddings and clusters them using K-Means.
+	Automatically determines the optimal number of clusters (k).
+	"""
+	# Don't try to find more clusters than there are items
+	max_clusters = min(len(embeddings), 10)
+
+	if max_clusters < 2:
+		# Not enough items to form distinct visual clusters
+		return np.zeros(len(embeddings), dtype=int), 1
+
+	# --- Elbow Method to find the optimal k ---
+	inertia_values = []
+	k_range = range(1, max_clusters + 1)
+
+	for k in k_range:
+		kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
+		kmeans.fit(embeddings)
+		inertia_values.append(kmeans.inertia_)
+
+	# Use kneed to automatically find the "elbow" point in the inertia plot
+	knee = KneeLocator(k_range, inertia_values, curve='convex', direction='decreasing')
+
+	# The optimal k is the elbow value, default to a reasonable number if no elbow is found
+	optimal_k = knee.elbow if knee.elbow else 2
+
+	# --- Run K-Means with the optimal k ---
+	kmeans = KMeans(n_clusters=optimal_k, random_state=42, n_init='auto')
+	visual_cluster_labels = kmeans.fit_predict(embeddings)
+
+	return visual_cluster_labels, optimal_k
