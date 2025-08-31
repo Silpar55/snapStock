@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 import os
 import logging
-from detect import process_image, visualize_detections
+from detection import process_image, visualize_detections
 from clustering import get_spatial_clusters, get_visual_clusters , visualize_clusters
 from feature_extraction import get_resnet_embeddings
 

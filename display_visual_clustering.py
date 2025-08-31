@@ -13,7 +13,7 @@ from feature_extraction import get_resnet_embeddings
 # From clustering.py
 from clustering import get_spatial_clusters, get_visual_clusters
 # From detection.py
-from detect import process_image
+from detection import process_image
 
 
 # NEW: A helper function to create a visual collage of the clusters
