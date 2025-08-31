@@ -53,7 +53,6 @@ def visualize_detections(data):
 
 		# Get confidence and class info
 		confidence = float(box.conf[0])
-		class_id = int(box.cls[0])
 		label = f"Item {confidence:.2f}"
 
 		# Draw the bounding box and label
