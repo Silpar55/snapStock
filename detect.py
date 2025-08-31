@@ -1,4 +1,3 @@
-import os
 import cv2
 
 
@@ -19,8 +18,7 @@ def process_image(model, image_path, conf=0.5, target_size=(640, 640)):
 	results = model(resized_image)[0]
 
 	high_conf_indices = results.boxes.conf > conf
-	filtered_boxes_resized = results.boxes[high_conf_indices].xyxy.cpu().numpy().astype(int)
-
+	boxes_object = results.boxes[high_conf_indices]
 	# Calculate scaling factors
 	x_scale = original_width / target_size[0]
 	y_scale = original_height / target_size[1]
@@ -28,66 +26,38 @@ def process_image(model, image_path, conf=0.5, target_size=(640, 640)):
 	return {
 		"original_image": original_image,  # Visualization purposes
 		"resized_image": resized_image,
-		"boxes_object": filtered_boxes_resized,  # DBSCAN purpose
+		"boxes_object": boxes_object,  # DBSCAN purpose
 		"scale_factors": (x_scale, y_scale)  # Rescaling purpose
 	}
 
 
-def test_model(model, input_folder="test_images_irl/", output_folder="test_results_irl/"):
-	# Create the output folder if it doesn't exist
-	os.makedirs(output_folder, exist_ok=True)
+def visualize_detections(data):
+	"""
+	Draws the detected bounding boxes and labels on the original image.
+	"""
+	# Unpack the data
+	image_to_draw = data["original_image"].copy()
+	boxes_object = data["boxes_object"]
+	x_scale, y_scale = data["scale_factors"]
 
-	# --- Get a list of all image files in the input folder ---
-	image_files = [f for f in os.listdir(input_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+	# Loop through each detected box
+	for box in boxes_object:
+		# Get coordinates from the resized image space
+		x1, y1, x2, y2 = [int(coord) for coord in box.xyxy[0]]
 
-	# --- Process Images in a Batch ---
-	# Create full paths for the model
-	full_image_paths = [os.path.join(input_folder, f) for f in image_files]
+		# Scale coordinates back to the original image size
+		scaled_x1 = int(x1 * x_scale)
+		scaled_y1 = int(y1 * y_scale)
+		scaled_x2 = int(x2 * x_scale)
+		scaled_y2 = int(y2 * y_scale)
 
-	if full_image_paths:
-		# Run inference on the entire batch of images
-		results_list = model(full_image_paths)
-		print(f"Found {len(image_files)} images. Processing...")
+		# Get confidence and class info
+		confidence = float(box.conf[0])
+		class_id = int(box.cls[0])
+		label = f"Item {confidence:.2f}"
 
-		# --- Loop through results and draw on each image ---
-		# The results_list will be in the same order as the input_image_paths
-		for i, results in enumerate(results_list):
-			# Get the original image path
-			original_img_path = full_image_paths[i]
+		# Draw the bounding box and label
+		cv2.rectangle(image_to_draw, (scaled_x1, scaled_y1), (scaled_x2, scaled_y2), (0, 255, 0), 2)
+		cv2.putText(image_to_draw, label, (scaled_x1, scaled_y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-			# Load the original image with OpenCV
-			img = cv2.imread(original_img_path)
-
-			print(f"  -> Detecting objects in {os.path.basename(original_img_path)}")
-
-			# Iterate through each detected box in the current image's results
-			for box in results.boxes:
-				# Get coordinates
-				x1, y1, x2, y2 = [int(coord) for coord in box.xyxy[0]]
-
-				# Get the confidence score
-				confidence = float(box.conf[0])
-
-				if confidence > 0.5:
-					# Get the class ID and name
-					class_id = int(box.cls[0])
-					class_name = results.names[class_id]
-
-					# Create the label text
-					label = f"{class_name} {confidence:.2f}"
-
-					# Draw the bounding box on the image (green color, thickness 2)
-					cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-					# Put the label text above the bounding box
-					cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-
-			# --- Save the Resulting Image ---
-			# Construct the output path
-			output_path = os.path.join(output_folder, os.path.basename(original_img_path))
-
-			# Save the image with the drawings
-			cv2.imwrite(output_path, img)
-			print(f"     ... Saved result to {output_path}")
-
-		print("\nProcessing complete.")
+	return image_to_draw
